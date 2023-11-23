@@ -21,8 +21,10 @@
 
 2. Create a .env file with parameters:
    ```
-   VK_API_USER_TOKEN=Your api token. [Instructions](https://dev.vk.com/ru/api/access-token/implicit-flow-user) for receiving
+   VK_API_USER_TOKEN=Your api token. 
    ```
+   [Instructions](https://dev.vk.com/ru/api/access-token/implicit-flow-user) for obtaining a user access key
+   
    ```
    VK_USER_ID=Your user id
    ```
