@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 API_VERSION = 5.199
 
 
-def get_random_comic_picture():
+def download_random_comics_picture(path):
     url = 'https://xkcd.com/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
@@ -24,16 +24,14 @@ def get_random_comic_picture():
     comment = comic_picture['alt']
     image_url = comic_picture['img']
 
-    return {'image_url': image_url, 'comment': comment}
-
-
-def fetch_image(url, path):
     filepath = path / 'file.png'
-    response = requests.get(url)
+    response = requests.get(image_url)
     response.raise_for_status()
 
     with open(filepath, 'wb') as file:
         file.write(response.content)
+
+    return {'image_url': image_url, 'comment': comment}
 
 
 def get_vk_address_for_image(user_token, group_id):
@@ -99,16 +97,16 @@ def publish_photo_vk(response, comment, user_token, user_id, group_id):
 def main():
     load_dotenv()
 
+    path = Path('images')
+    path.mkdir(parents=True, exist_ok=True)
+
     user_id = os.environ.get('VK_USER_ID')
     user_token = os.environ.get('VK_API_USER_TOKEN')
     group_id = os.environ.get('GROUP_ID')
-    comic_picture = get_random_comic_picture()
-    image_url = comic_picture['image_url']
-    comment = comic_picture['comment']
 
-    path = Path('images')
-    path.mkdir(parents=True, exist_ok=True)
-    fetch_image(image_url, path)
+    comic_picture = download_random_comics_picture(path)
+
+    comment = comic_picture['comment']
 
     photo_address = get_vk_address_for_image(user_token, group_id)
 
