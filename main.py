@@ -46,9 +46,7 @@ def get_vk_address_for_image(user_token, group_id):
     return response.json()
 
 
-def upload_photo_vk(response, user_token, group_id):
-    url = response['response']['upload_url']
-
+def upload_photo_vk(url, user_token, group_id):
     with open('images/file.png', 'rb') as file:
         files = {'photo': file}
 
@@ -61,10 +59,7 @@ def upload_photo_vk(response, user_token, group_id):
         return response.json()
 
 
-def save_photo_vk(response, user_token, group_id):
-    gated_hash = response['hash']
-    photo = response['photo']
-    server = response['server']
+def save_photo_vk(gated_hash, photo, server, user_token, group_id):
     url = 'https://api.vk.com/method/photos.saveWallPhoto'
 
     params = {'access_token': user_token, 'v': API_VERSION,
@@ -77,8 +72,7 @@ def save_photo_vk(response, user_token, group_id):
     return response.json()
 
 
-def publish_photo_vk(response, comment, user_token, user_id, group_id):
-    media_id = response['response'][0]['id']
+def publish_photo_vk(media_id, comment, user_token, user_id, group_id):
     owner_id = '-' + group_id
     from_group = 1
     attachments = f'photo{user_id}_{media_id}'
@@ -100,7 +94,6 @@ def main():
     path = Path('images')
     path.mkdir(parents=True, exist_ok=True)
 
-    user_id = os.environ.get('VK_USER_ID')
     user_token = os.environ.get('VK_API_USER_TOKEN')
     group_id = os.environ.get('GROUP_ID')
 
@@ -108,15 +101,24 @@ def main():
 
     comment = comic_picture['comment']
 
-    photo_address = get_vk_address_for_image(user_token, group_id)
+    url_for_upload_image_vk = get_vk_address_for_image(
+        user_token, group_id)['response']['upload_url']
 
-    response_upload_photo = upload_photo_vk(photo_address, user_token,
+    response_upload_photo = upload_photo_vk(url_for_upload_image_vk,
+                                            user_token,
                                             group_id)
 
-    response_save_photo = save_photo_vk(response_upload_photo,
+    gated_hash = response_upload_photo['hash']
+    photo = response_upload_photo['photo']
+    server = response_upload_photo['server']
+
+    response_save_photo = save_photo_vk(gated_hash, photo, server,
                                         user_token, group_id)
 
-    publish_photo_vk(response_save_photo, comment,
+    user_id = response_save_photo['response'][0]['owner_id']
+    media_id = response_save_photo['response'][0]['id']
+
+    publish_photo_vk(media_id, comment,
                      user_token, user_id, group_id)
 
     os.remove('images/file.png')
