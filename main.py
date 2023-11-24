@@ -18,17 +18,16 @@ def get_random_comic_picture():
     random_number = random.randint(1, last_comic_picture['num'])
     comic_picture_url = f'https://xkcd.com/{random_number}/info.0.json'
     comic_picture_response = requests.get(comic_picture_url)
+    comic_picture = comic_picture_response.json()
     response.raise_for_status()
 
-    comment = comic_picture_response.json()['alt']
-    image_url = comic_picture_response.json()['img']
+    comment = comic_picture['alt']
+    image_url = comic_picture['img']
 
     return {'image_url': image_url, 'comment': comment}
 
 
-def fetch_image(url):
-    path = Path('images')
-    path.mkdir(parents=True, exist_ok=True)
+def fetch_image(url, path):
     filepath = path / 'file.png'
     response = requests.get(url)
     response.raise_for_status()
@@ -107,7 +106,9 @@ def main():
     image_url = comic_picture['image_url']
     comment = comic_picture['comment']
 
-    fetch_image(image_url)
+    path = Path('images')
+    path.mkdir(parents=True, exist_ok=True)
+    fetch_image(image_url, path)
 
     photo_address = get_vk_address_for_image(user_token, group_id)
 
