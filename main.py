@@ -45,7 +45,6 @@ def download_random_comic(path):
 
     with open(filepath, 'wb') as file:
         file.write(response.content)
-        file.close
 
     return {'image_url': image_url, 'comment': comment}
 
@@ -60,8 +59,9 @@ def get_url_for_upload_image_vk(user_token, group_id):
     response.raise_for_status()
     json_response = response.json()
     vk_response_processing(json_response)
+    upload_url = json_response['response']['upload_url']
 
-    return json_response
+    return upload_url
 
 
 def upload_photo_vk(url, user_token, group_id):
@@ -72,12 +72,11 @@ def upload_photo_vk(url, user_token, group_id):
                   'group_id': group_id}
 
         response = requests.post(url, params=params, files=files)
-        response.raise_for_status()
-        json_response = response.json()
-        vk_response_processing(json_response)
-        file.close
+    response.raise_for_status()
+    unpacked_response = response.json()
+    vk_response_processing(unpacked_response)
 
-        return json_response
+    return unpacked_response
 
 
 def save_photo_vk(gated_hash, photo, server, user_token, group_id):
@@ -96,7 +95,7 @@ def save_photo_vk(gated_hash, photo, server, user_token, group_id):
 
 
 def publish_photo_vk(media_id, comment, user_token, user_id, group_id):
-    owner_id = '-' + group_id
+    owner_id = '{}{}'.format('-', group_id)
     from_group = 1
     attachments = f'photo{user_id}_{media_id}'
     url = 'https://api.vk.com/method/wall.post'
@@ -120,15 +119,15 @@ def main():
         path = Path('images')
         path.mkdir(parents=True, exist_ok=True)
 
-        user_token = os.environ.get('VK_API_USER_TOKEN')
-        group_id = os.environ.get('GROUP_ID')
+        user_token = os.environ['VK_API_USER_TOKEN']
+        group_id = os.environ['GROUP_ID']
 
         random_comic = download_random_comic(path)
 
         comic_comment = random_comic['comment']
 
         url_for_upload_image_vk = get_url_for_upload_image_vk(
-            user_token, group_id)['response']['upload_url']
+            user_token, group_id)
 
         upload_photo_response = upload_photo_vk(url_for_upload_image_vk,
                                                 user_token,
